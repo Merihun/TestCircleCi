@@ -61,7 +61,7 @@ workflows:
             - one
   welcome:
     jobs:
-      - welcome/run
+      #- welcome/run
       - print_hello
       - print_world:
           requires:
