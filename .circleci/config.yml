@@ -36,11 +36,6 @@ jobs:
           else
             echo "Nope!"; exit 1
           fi
-  deploy-job:
-    steps:
-      - add_ssh_keys:
-          fingerprints:
-            - "31:73:52:76:b7:2d:1e:db:7b:fa:af:2a:bd:ef:d4:0f"
 workflows:
   version: 2
   one_and_two:
