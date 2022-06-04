@@ -16,7 +16,7 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file template.yml \
-              --parameters temp_parameters.json \
+              --parameters ParameterKey=KeyName,ParameterValue=temp_parameters \
               --stack-name myStack-test \
               --region us-east-1
   myjob1: # Choose any name, such as `build`
