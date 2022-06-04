@@ -41,6 +41,18 @@ jobs:
           else
             echo "Nope!"; exit 1
           fi
+  create_infrastructure:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Create Cloudformation Stack
+          command: |
+            aws cloudformation deploy \
+              --template-file template.yml \
+              --stack-name mystack-${CIRCLE_WORKFLOW_ID:0:5}  \
+              --region us-east-1
   print_hello:
     docker:
       - image: circleci/node:13.8.0
@@ -66,3 +78,6 @@ workflows:
       - print_world:
           requires:
             - print_hello
+  infrastructure:
+    jobs:
+      - create_infrastructure
