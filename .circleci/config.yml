@@ -1,46 +1,11 @@
-version: 2
+version: 2.1
 # Use a package of configuration called an orb.
 orbs:
-  # Declare a dependency on the welcome-orb
+  # Choose either one of the orbs below
   welcome: circleci/welcome-orb@0.4.1
-# Orchestrate or schedule a set of jobs
+  # aws-cli: circleci/aws-cli@2.0.3
+# Define the jobs we want to run for this project
 jobs:
-  one:
-    docker:
-      - image: cimg/ruby:3.0.2
-        auth:
-          username: mydockerhub-user
-          password: $DOCKERHUB_PASSWORD # context / project UI env-var reference
-    steps:
-      - checkout
-      - run: echo "A first hello"
-      - run: mkdir -p my_workspace
-      - run: echo "Trying out workspaces" > my_workspace/echo-output
-      - persist_to_workspace:
-          # Must be an absolute path, or relative path from working_directory
-          root: my_workspace
-          # Must be relative path from root
-          paths:
-            - echo-output
-  two:
-    docker:
-      - image: cimg/ruby:3.0.2
-        auth:
-          username: mydockerhub-user
-          password: $DOCKERHUB_PASSWORD # context / project UI env-var reference
-    steps:
-      - checkout
-      - run: echo "A more familiar hi"
-      - attach_workspace:
-          # Must be absolute path or relative path from working_directory
-          at: my_workspace
-
-      - run: |
-          if [[ $(cat my_workspace/echo-output) == "Trying out workspaces" ]]; then
-            echo "It worked!";
-          else
-            echo "Nope!"; exit 1
-          fi
   create_infrastructure:
     docker:
       - image: amazon/aws-cli
@@ -51,33 +16,19 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file template.yml \
-              --stack-name myStack-test \
+              --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5} \
               --region us-east-1
-  print_hello:
+  myjob1: # Choose any name, such as `build`
+    # The primary container, where your job's commands will run
     docker:
-      - image: circleci/node:13.8.0
+      - image: amazon/aws-cli
     steps:
-      - run: echo hello
-  print_world:
-    docker:
-      - image: circleci/node:13.8.0
-    steps:
-      - run: echo world
+      - checkout # check out the code in the project directory
+      - run: echo "hello world" # run the `echo` command
+# Sequential workflow
 workflows:
-  version: 2
-  one_and_two:
-    jobs:
-      - one
-      - two:
-          requires:
-            - one
-  welcome:
-    jobs:
-      #- welcome/run
-      - print_hello
-      - print_world:
-          requires:
-            - print_hello
-  infrastructure:
+  # Name the workflow
+  myWorkflow:
     jobs:
       - create_infrastructure
+      - myjob1
