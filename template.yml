@@ -1,24 +1,45 @@
-# Exercise - Rollback
-AWSTemplateFormatVersion: 2010-09-09
-Description: ND9991 C3 L4
+Parameters:
+  myVPC:
+    Description: VPC used to deploy our resources below
+    Type: AWS::EC2::VPC::Id
+  PublicSubnet:
+    Description: Subnet to be used for our Web Server
+    Type: AWS::EC2::Subnet::Id
+  AMItoUse:
+    Description: AMI to use for our base image
+    Type: String
 Resources:
-  EC2Instance:
-    Type: "AWS::EC2::Instance"
+  myWebAccessSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
     Properties:
-      SecurityGroups:
-        - !Ref InstanceSecurityGroup
-      # Change this, as applicable to you
-      KeyName: udacity1
-      # Change this, as applicable to you
-      # You may need to find out what instance types are available in your region - use https://cloud-images.ubuntu.com/locator/ec2/
-      ImageId: "ami-09e67e426f25ce0d7"
-      InstanceType: t3.micro
-  InstanceSecurityGroup:
-    Type: "AWS::EC2::SecurityGroup"
-    Properties:
-      GroupDescription: Enable SSH access via port 22
+      GroupDescription: Allow http to our test host
+      VpcId:
+        Ref: myVPC
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: "22"
-          ToPort: "22"
+          FromPort: 80
+          ToPort: 80
           CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
+  myWebServerInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t3.micro
+      ImageId: !Ref AMItoUse
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: "true"
+          DeviceIndex: "0"
+          GroupSet:
+            - Ref: "myWebAccessSecurityGroup"
+          SubnetId:
+            Ref: "PublicSubnet"
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          yum install -y httpd
+          systemctl start httpd
